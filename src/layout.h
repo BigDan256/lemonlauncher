@@ -44,6 +44,8 @@ private:
    
    TTF_Font* _title_font;
    TTF_Font* _list_font;
+   TTF_Font* _coinnum_font;
+   TTF_Font* _timecount_font;
    
    SDL_Rect _title_rect;
    Uint32 _title_color;
@@ -61,6 +63,16 @@ private:
    SDL_Rect _snap_rect;
    Uint8 _snap_alpha;
    
+   SDL_Rect _coinnum_rect;
+   Uint32 _coinnum_color;
+   int _coinnum_font_height;
+   justify_t _coinnum_justify;
+
+   SDL_Rect _timecount_rect;
+   Uint32 _timecount_color;
+   int _timecount_font_height;
+   justify_t _timecount_justify;
+
    SDL_Surface* _snap;
    SDL_Surface* _buffer;
    

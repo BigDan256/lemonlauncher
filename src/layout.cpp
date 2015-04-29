@@ -136,12 +136,32 @@ layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
       CFG_END()
    };
    
+   cfg_opt_t coinnum_opts[] = {
+      CFG_INT_LIST("position", "{0,56}", CFGF_NONE),
+      CFG_INT_LIST_CB("dimensions", "{full,full}", CFGF_NONE, &cb_dimension),
+      CFG_INT("font_height", 28, CFGF_NONE),
+      CFG_INT_CB("justify", center_justify, CFGF_NONE, &cb_justify),
+      CFG_INT("color", 0xc2f4ff, CFGF_NONE),
+      CFG_END()
+   };
+
+   cfg_opt_t timecount_opts[] = {
+      CFG_INT_LIST("position", "{0,56}", CFGF_NONE),
+      CFG_INT_LIST_CB("dimensions", "{full,full}", CFGF_NONE, &cb_dimension),
+      CFG_INT("font_height", 28, CFGF_NONE),
+      CFG_INT_CB("justify", center_justify, CFGF_NONE, &cb_justify),
+      CFG_INT("color", 0xc2f4ff, CFGF_NONE),
+      CFG_END()
+   };
+
    cfg_opt_t opts[] = {
       CFG_STR("font", "", CFGF_NONE),
       CFG_STR("background", "", CFGF_NONE),
       CFG_SEC("title", title_opts, CFGF_NONE),
       CFG_SEC("list", list_opts, CFGF_NONE),
       CFG_SEC("snapshot", snap_opts, CFGF_NONE),
+      CFG_SEC("coinnum", coinnum_opts, CFGF_NONE),
+      CFG_SEC("timecount", timecount_opts, CFGF_NONE),
       CFG_END()
    };
    
@@ -151,6 +171,8 @@ layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
    cfg_set_validate_func(cfg, "title", &cb_validate_pos_dims);
    cfg_set_validate_func(cfg, "list", &cb_validate_pos_dims);
    cfg_set_validate_func(cfg, "snapshot", &cb_validate_pos_dims);
+   cfg_set_validate_func(cfg, "coinnum", &cb_validate_pos_dims);
+   cfg_set_validate_func(cfg, "timecount", &cb_validate_pos_dims);
    
    // parse theme file with libconfuse
    int result = cfg_parse(cfg, theme_file);
@@ -210,6 +232,24 @@ layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
    
    _snap_alpha = cfg_getint(snapshot, "alpha");
    
+   cfg_t* coinnum = cfg_getsec(cfg, "coinnum");
+
+   _coinnum_rect.x = cfg_getnint(coinnum, "position", 0);
+   _coinnum_rect.y = cfg_getnint(coinnum, "position", 1);
+   parse_dimensions(&_coinnum_rect, coinnum);
+   _coinnum_font_height = cfg_getint(coinnum, "font_height");
+   _coinnum_justify = (justify_t)cfg_getint(coinnum, "justify");
+   _coinnum_color  = cfg_getint(coinnum, "color");
+
+   cfg_t* timecount = cfg_getsec(cfg, "timecount");
+
+   _timecount_rect.x = cfg_getnint(timecount, "position", 0);
+   _timecount_rect.y = cfg_getnint(timecount, "position", 1);
+   parse_dimensions(&_timecount_rect, timecount);
+   _timecount_font_height = cfg_getint(timecount, "font_height");
+   _timecount_justify = (justify_t)cfg_getint(timecount, "justify");
+   _timecount_color  = cfg_getint(timecount, "color");
+
    struct stat fstat;
    if (stat(font_file, &fstat) == 0) {
       log << debug << "layout: using font file " << font_file << endl;
@@ -225,6 +265,18 @@ layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
          log << error << TTF_GetError() << endl;
          throw bad_lemon("layout: unable to create list font");
       }
+
+      _coinnum_font = TTF_OpenFont(font_file, _coinnum_font_height);
+      if (!_coinnum_font) {
+         log << error << TTF_GetError() << endl;
+         throw bad_lemon("layout: unable to create coinnum font");
+      }
+
+      _timecount_font  = TTF_OpenFont(font_file, _timecount_font_height);
+      if (!_timecount_font) {
+         log << error << TTF_GetError() << endl;
+         throw bad_lemon("layout: unable to create timecount font");
+      }
    } else {
       log << warn << "layout: \"" << font_file << "\" not found" << endl;
       log << warn << "layout: using default font" << endl;
@@ -236,6 +288,12 @@ layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
       
       rw = SDL_RWFromMem((void*)default_font, default_font_size);
       _list_font = TTF_OpenFontRW(rw, 0, _list_font_height);
+
+      rw = SDL_RWFromMem((void*)default_font, default_font_size);
+      _coinnum_font = TTF_OpenFontRW(rw, 0, _coinnum_font_height);
+
+      rw = SDL_RWFromMem((void*)default_font, default_font_size);
+      _timecount_font = TTF_OpenFontRW(rw, 0, _timecount_font_height);
    }
    
    cfg_free(cfg);
@@ -248,6 +306,8 @@ layout::~layout()
    
    TTF_CloseFont(_title_font); // free fonts
    TTF_CloseFont(_list_font);
+   TTF_CloseFont(_coinnum_font); // free fonts
+   TTF_CloseFont(_timecount_font);
    
    if (_snap)  // free snapshot if there is one
       SDL_FreeSurface(_snap);
@@ -363,6 +423,38 @@ void layout::render(menu* current)
    // finished with the title surface
    SDL_FreeSurface(title);
    
+   SDL_Surface* coinnum =
+      TTF_RenderText_Blended(_coinnum_font, "N/A", RGB_SDL_Color(_coinnum_color));
+
+   SDL_Rect coinnum_rect = _coinnum_rect;
+
+   if (_coinnum_justify == right_justify)
+      coinnum_rect.x += _coinnum_rect.w - coinnum->w;
+   else if (_coinnum_justify == center_justify)
+      coinnum_rect.x += (_coinnum_rect.w - coinnum->w) / 2;
+
+   // draw coinnum to back buffer
+   SDL_BlitSurface(coinnum, NULL, _buffer, &coinnum_rect);
+
+   // finished with the coinnum surface
+   SDL_FreeSurface(coinnum);
+
+   SDL_Surface* timecount =
+      TTF_RenderText_Blended(_timecount_font, "N/A", RGB_SDL_Color(_timecount_color));
+
+   SDL_Rect timecount_rect = _timecount_rect;
+
+   if (_timecount_justify == right_justify)
+      timecount_rect.x += _timecount_rect.w - timecount->w;
+   else if (_timecount_justify == center_justify)
+      timecount_rect.x += (_timecount_rect.w - timecount->w) / 2;
+
+   // draw timecount to back buffer
+   SDL_BlitSurface(timecount, NULL, _buffer, &timecount_rect);
+
+   // finished with the timecount surface
+   SDL_FreeSurface(timecount);
+
    // if the menu doesn't have any children, just return now
    if (!current->has_children())
       return;

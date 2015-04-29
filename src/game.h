@@ -35,10 +35,12 @@ private:
    string _rom;    // rom name
    string _name;   // game name
    string _params; // game specific mame parameters
+   string _emu; // emulator for game
+   string _system; // the system (for MESS)
 
 public:
-   game(const char* rom, const char* name, const char* params) :
-      _rom(rom), _name(name), _params(params) { }
+   game(const char* rom, const char* name, const char* params, const char* emu, const char* system) :
+      _rom(rom), _name(name), _params(params), _emu(emu), _system(system) { }
 
    virtual ~game() { }
    
@@ -49,6 +51,14 @@ public:
    /** Returns mame parameters (if any) */
    const char* params() const
    { return _params.c_str(); }
+
+   /** Returns emu (if any) */
+   const char* emu() const
+   { return _emu.c_str(); }
+
+   /** Returns system (if any) */
+   const char* system() const
+   { return _system.c_str(); }
 
    /** Returns game name as item text */
    const char* text() const

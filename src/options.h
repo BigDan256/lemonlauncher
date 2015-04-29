@@ -43,6 +43,21 @@ namespace ll {
 #define KEY_MAME_PATH       "mame"
 #define KEY_MAME_SNAP_PATH  "snap"
 
+/* Extended settings */
+#define KEY_MESS_PATH       "mess"
+#define KEY_EMU0_PATH       "emu0"
+#define KEY_EMU1_PATH       "emu1"
+#define KEY_EMU2_PATH       "emu2"
+#define KEY_EMU3_PATH       "emu3"
+#define KEY_EMU4_PATH       "emu4"
+#define KEY_EMU5_PATH       "emu5"
+#define KEY_EMU6_PATH       "emu6"
+#define KEY_EMU7_PATH       "emu7"
+#define KEY_EMU8_PATH       "emu8"
+#define KEY_EMU9_PATH       "emu9"
+#define KEY_MAME_SNAPX_PATH  "snapx"
+#define KEY_MAME_SNAP384_PATH  "snap384"
+
 /* Key mapping */
 #define KEY_KEYCODE_EXIT      "exit"
 #define KEY_KEYCODE_UP        "up"

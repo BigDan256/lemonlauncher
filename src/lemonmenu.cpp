@@ -27,6 +27,7 @@
 #include <sstream>
 #include <algorithm>
 #include <SDL/SDL_rotozoom.h>
+#include <typeinfo>
 
 #define UPDATE_SNAP_EVENT 1
 
@@ -71,6 +72,8 @@ void lemon_menu::load_menus()
       CFG_STR("rom", 0, CFGF_NODEFAULT),
       CFG_STR("title", 0, CFGF_NODEFAULT),
       CFG_STR("params", "", CFGF_NONE),
+      CFG_STR("emu", "mame", CFGF_NONE),
+      CFG_STR("system", "", CFGF_NONE),
       CFG_END()
    };
 
@@ -134,9 +137,11 @@ void lemon_menu::load_menus()
             char* rom = cfg_getstr(g, "rom");
             char* title = cfg_getstr(g, "title");
             char* params = cfg_getstr(g, "params");
+            char* emu = cfg_getstr(g, "emu");
+            char* system = cfg_getstr(g, "system");
 
             if (title[0] != '.' || _show_hidden)
-               pmenu->add_child(new game(rom, title, params));
+               pmenu->add_child(new game(rom, title, params, emu, system));
          }
 
          // sort the menu alphabeticly using game/item name
@@ -309,7 +314,7 @@ void lemon_menu::handle_activate()
 void lemon_menu::handle_run()
 {
    game* g = (game*)_current->selected();
-   string cmd(g_opts.get_string(KEY_MAME_PATH));
+   string cmd(g_opts.get_string(g->emu()));
 
    log << info << "handle_run: launching game " << g->text() << endl;
 
@@ -321,9 +326,30 @@ void lemon_menu::handle_run()
    size_t pos = cmd.find("%r");
    if (pos == string::npos)
       throw bad_lemon("mame path missing %r specifier");
+   else
+   {
+      string arg = "'";
+      for (int i = 0,j = strlen(g->rom());i < j;i++)
+      {
+         if (g->rom()[i] == '\'') arg = arg + "'\\'";
+         arg = arg + g->rom()[i];
+      }
+      arg = arg + "'";
+      while (pos != string::npos)
+      {
+         cmd.replace(pos, 2, arg);
+         pos = cmd.find("%r");
+      }
+   }
 
-   cmd.replace(pos, 2, g->rom());
+   pos = cmd.find("%s");
+   while (pos != string::npos)
+   {
+      cmd.replace(pos, 2, g->system());
+      pos = cmd.find("%s");
+   }
 
+   log << "handle_run: " << cmd << endl;
    log << debug << "handle_run: " << cmd << endl;
 
    system(cmd.c_str());

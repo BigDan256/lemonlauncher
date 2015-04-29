@@ -20,7 +20,7 @@
 #include "options.h"
 #include "error.h"
 
-#include <string>
+#include <string.h>
 #include <iostream>
 
 namespace ll { options g_opts; }
@@ -67,6 +67,21 @@ void options::load(const char* conf_dir)
       CFG_STR(KEY_MAME_PATH, "mame %r", CFGF_NONE),
       CFG_STR(KEY_MAME_SNAP_PATH, "", CFGF_NONE),
       
+      CFG_STR(KEY_MESS_PATH, "mess %s %r", CFGF_NONE),
+      CFG_STR(KEY_EMU0_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU1_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU2_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU3_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU4_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU5_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU6_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU7_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU8_PATH, "mame %r", CFGF_NONE),
+      CFG_STR(KEY_EMU9_PATH, "mame %r", CFGF_NONE),
+
+      CFG_STR(KEY_MAME_SNAPX_PATH, "", CFGF_NONE),
+      CFG_STR(KEY_MAME_SNAP384_PATH, "", CFGF_NONE),
+
       CFG_INT(KEY_KEYCODE_EXIT, 27, CFGF_NONE),
       CFG_INT(KEY_KEYCODE_UP, 273, CFGF_NONE),
       CFG_INT(KEY_KEYCODE_DOWN, 274, CFGF_NONE),
